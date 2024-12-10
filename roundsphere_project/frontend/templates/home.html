@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Product Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background: #007bff;
+            color: #fff;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 1rem;
+            font-weight: bold;
+        }
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        .product-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .product-card h3 {
+            margin: 0.5rem 0;
+        }
+        .product-card p {
+            color: #666;
+        }
+        .product-card .price {
+            font-weight: bold;
+            color: #333;
+        }
+        .product-card .stock {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 0.5rem;
+        }
+        .add-product-btn {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            background: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .add-product-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="brand">
+            <h1>Product Dashboard</h1>
+        </div>
+        <div class="links">
+            <a href="/orders/">Orders</a>
+            <a href="/data/">Measurements</a>
+            <a href="/logout/">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h2>Available Products</h2>
+            <a href="/products/add" class="add-product-btn">Add Product</a>
+        </div>
+
+        <div class="product-list">
+            <!-- Loop through products fetched from the API -->
+            {% for product in products %}
+            <div class="product-card">
+                <h3>{{ product.name }}</h3>
+                <p>{{ product.description }}</p>
+                <div class="price">Price: ${{ product.price }}</div>
+                <div class="stock">Stock: {{ product.stock }}</div>
+            </div>
+            {% empty %}
+            <p>No products available at the moment. Please add new products.</p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
