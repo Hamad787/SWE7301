@@ -1,0 +1,96 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "RoundSphere API",
+      "description": "API for managing products, orders, payments, and measurements",
+      "version": "1.0.0"
+    },
+    "basePath": "/api",
+    "paths": {
+      "/products": {
+        "get": {
+          "summary": "Get all products",
+          "responses": {
+            "200": {
+              "description": "A list of products",
+              "schema": {
+                "$ref": "#/definitions/Product"
+              }
+            }
+          }
+        },
+        "post": {
+          "summary": "Create a new product",
+          "parameters": [
+            {
+              "in": "body",
+              "name": "product",
+              "description": "Product to add",
+              "schema": {
+                "$ref": "#/definitions/Product"
+              }
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Product created successfully"
+            }
+          }
+        }
+      },
+      "/products/{product_id}": {
+        "get": {
+          "summary": "Get a product by ID",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "product_id",
+              "required": true,
+              "type": "integer",
+              "description": "ID of the product to retrieve"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Product details",
+              "schema": {
+                "$ref": "#/definitions/Product"
+              }
+            },
+            "404": {
+              "description": "Product not found"
+            }
+          }
+        }
+      }
+    },
+    "definitions": {
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Product ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Product name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product description"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "description": "Product price"
+          },
+          "stock": {
+            "type": "integer",
+            "description": "Product stock"
+          }
+        }
+      }
+    }
+  }
+  
