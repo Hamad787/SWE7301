@@ -1,0 +1,88 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <div class="login-container">
+    <h2 class="text-center mb-4">Login to Your Account</h2>
+
+    <!-- Display error messages from Django messages framework -->
+    {% if messages %}
+      <div class="alert alert-danger">
+        {% for message in messages %}
+          <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="POST" class="login-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required class="form-control" placeholder="Enter your username">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required class="form-control" placeholder="Enter your password">
+      </div>
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+      </div>
+
+      <div class="text-center mt-3">
+        <a href="#" class="text-muted">Forgot your password?</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Include Bootstrap and custom CSS for design -->
+  <style>
+    body {
+      background-color: #f7f9fc;
+      font-family: 'Arial', sans-serif;
+    }
+
+    .login-container {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 30px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-container h2 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      font-weight: bold;
+    }
+
+    .form-control {
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 15px;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      border: none;
+      padding: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+
+    .text-muted {
+      font-size: 14px;
+    }
+  </style>
+{% endblock %}

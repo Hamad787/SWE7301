@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - RoundSphere{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Products</h2>
+    
+    <div class="row">
+        {% for product in products %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text">{{ product.description }}</p>
+                        <p class="card-text"><strong>Price:</strong> ${{ product.price }}</p>
+                        
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderModal{{ product.id }}">
+                            Order Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Modal -->
+            <div class="modal fade" id="orderModal{{ product.id }}" tabindex="-1" aria-labelledby="orderModalLabel{{ product.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="orderModalLabel{{ product.id }}">Order {{ product.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="orderForm{{ product.id }}" class="order-form">
+                                <div class="mb-3">
+                                    <label for="customerName{{ product.id }}" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="customerName{{ product.id }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="customerEmail{{ product.id }}" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="customerEmail{{ product.id }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="quantity{{ product.id }}" class="form-label">Quantity</label>
+                                    <input type="number" class="form-control" id="quantity{{ product.id }}" min="1" value="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <p><strong>Unit Price:</strong> ${{ product.price }}</p>
+                                    <p><strong>Total:</strong> $<span id="totalAmount{{ product.id }}">{{ product.price }}</span></p>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="submitOrder({{ product.id }})">Proceed to Payment</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No products available at the moment.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    {% for product in products %}
+    // Update total amount when quantity changes
+    document.getElementById('quantity{{ product.id }}').addEventListener('change', function(e) {
+        const quantity = parseInt(e.target.value) || 1;
+        const price = {{ product.price }};
+        document.getElementById('totalAmount{{ product.id }}').textContent = (quantity * price).toFixed(2);
+    });
+    {% endfor %}
+
+    function submitOrder(productId) {
+        const form = document.getElementById(`orderForm${productId}`);
+        const customerName = document.getElementById(`customerName${productId}`).value;
+        const customerEmail = document.getElementById(`customerEmail${productId}`).value;
+        const quantity = document.getElementById(`quantity${productId}`).value;
+        const totalAmount = parseFloat(document.getElementById(`totalAmount${productId}`).textContent);
+
+        if (!customerName || !customerEmail || !quantity) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        const orderData = {
+            customer_name: customerName,
+            customer_email: customerEmail,
+            quantity: parseInt(quantity),
+            total_amount: totalAmount
+        };
+
+        fetch(`/products/${productId}/create-order/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(orderData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.href = data.redirect_url;
+            } else {
+                throw new Error(data.error || 'Failed to create order');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating order: ' + error.message);
+        });
+    }
+</script>
+{% endblock %}
