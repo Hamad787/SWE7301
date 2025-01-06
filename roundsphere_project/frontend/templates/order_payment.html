@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment - Order #{{ order.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-message {
+        display: none;
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+
+    .payment-section {
+        transition: opacity 0.3s ease;
+    }
+
+    .payment-section.processing {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Order Payment</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Order Details</h5>
+                            <p><strong>Order ID:</strong> #{{ order.id }}</p>
+                            <p><strong>Product:</strong> {{ order.product_name }}</p>
+                            <p><strong>Quantity:</strong> {{ order.quantity }}</p>
+                            <p><strong>Unit Price:</strong> ${{ order.unit_price|floatformat:2 }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h5>Payment Summary</h5>
+                            <p><strong>Total Amount:</strong> ${{ order.total_amount|floatformat:2 }}</p>
+                            <p><strong>Status:</strong> <span id="payment-status">{{ order.payment_status|title }}</span></p>
+                        </div>
+                    </div>
+
+                    <div id="success-message" class="success-message">
+                        <h5 class="alert-heading">Payment Completed Successfully!</h5>
+                        <p>Thank you for your payment. Your order has been processed successfully.</p>
+                        <hr>
+                        <p class="mb-0">You will be redirected to the orders page shortly...</p>
+                    </div>
+
+                    {% if order.payment_status != 'completed' %}
+                        <div class="payment-section" id="payment-section">
+                            {% if order.payment_status == 'pending' %}
+                            <div class="text-center">
+                                <h5 class="mb-4">Payment Methods</h5>
+                                <div id="paypal-button-container"></div>
+                                
+                                <!-- Test Credentials Info -->
+                                <div class="mt-4 text-start">
+                                    <div class="alert alert-info small py-2">
+                                        <i class="fas fa-info-circle"></i> <strong>Test PayPal Account:</strong><br>
+                                        Email: <code>sb-w47lfd36195093@personal.example.com</code><br>
+                                        Password: <code>GVTqWF1*</code>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <h5 class="alert-heading">Payment Completed!</h5>
+                            <p>Thank you for your payment. Your order has been processed successfully.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if order.payment_status != 'completed' %}
+    <script src="https://www.paypal.com/sdk/js?client-id=test&currency=USD&commit=true"></script>
+    <script>
+        // Store Django template variables in JavaScript variables
+        const orderId = "{{ order.id }}";
+        const orderAmount = "{{ order.total_amount|floatformat:2 }}";
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function showSuccessMessage() {
+            document.getElementById('payment-section').style.display = 'none';
+            document.getElementById('success-message').style.display = 'block';
+            document.getElementById('payment-status').textContent = 'Completed';
+            
+            // Redirect after 3 seconds
+            setTimeout(() => {
+                window.location.href = '{% url "frontend:orders" %}';
+            }, 3000);
+        }
+
+        paypal.Buttons({
+            style: {
+                layout: 'vertical',
+                color:  'blue',
+                shape:  'rect',
+                label:  'pay'
+            },
+            createOrder: function(data, actions) {
+                document.getElementById('payment-section').classList.add('processing');
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: orderAmount
+                        }
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(orderData) {
+                    const paymentData = {
+                        order_id: parseInt(orderId),
+                        amount: parseFloat(orderAmount),
+                        payment_method: 'paypal',
+                        payment_details: {
+                            payment_id: orderData.id,
+                            status: orderData.status.toLowerCase()
+                        }
+                    };
+
+                    return fetch(`/orders/${orderId}/process-payment/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify(paymentData)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(data => {
+                                throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showSuccessMessage();
+                        } else {
+                            throw new Error(data.error || 'Payment failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.getElementById('payment-section').classList.remove('processing');
+                        alert('Payment failed: ' + error.message);
+                    });
+                });
+            },
+            onCancel: function() {
+                document.getElementById('payment-section').classList.remove('processing');
+            },
+            onError: function(err) {
+                console.error('PayPal Error:', err);
+                document.getElementById('payment-section').classList.remove('processing');
+                alert('There was an error processing your payment. Please try again.');
+            }
+        }).render('#paypal-button-container');
+    </script>
+{% endif %}
+{% endblock %}

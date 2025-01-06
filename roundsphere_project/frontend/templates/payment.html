@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment - Order #{{ order.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-card {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .order-summary {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+    }
+    
+    .payment-methods {
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card payment-card">
+        <div class="card-header">
+            <h3 class="mb-0">Complete Your Payment</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="order-summary">
+                        <h4 class="mb-4">Order Summary</h4>
+                        <div class="mb-3">
+                            <strong>Order ID:</strong> #{{ order.id }}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Product ID:</strong> {{ order.product_id }}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Quantity:</strong> {{ order.quantity }}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Total Amount:</strong> ${{ order.total_amount|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="payment-methods">
+                        <h4 class="mb-4">Payment Method</h4>
+                        <div id="paypal-button-container"></div>
+                        
+                        <!-- Test Credentials Info -->
+                        <div class="mt-4">
+                            <p class="text-muted small">
+                                <i class="fas fa-info-circle"></i> Test PayPal Credentials:<br>
+                                Email: <code>sb-w47lfd36195093@personal.example.com</code><br>
+                                Password: <code>GVTqWF1*</code>
+                            </p>
+                        </div>
+                        <div id="payment-message"></div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                For testing, use these sandbox credentials:<br>
+                                Email: sb-43mkl26270089@personal.example.com<br>
+                                Password: test12345
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- PayPal Script -->
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD&intent=capture&commit=true"></script>
+<script>
+    const orderId = '{{ order.id }}';
+    const csrfToken = '{{ csrf_token }}';
+    const orderAmount = '{{ order.total_amount }}';
+    
+    // Function to show message
+    function showMessage(message, type = 'info') {
+        const messageDiv = document.getElementById('payment-message');
+        messageDiv.className = `alert alert-${type} mt-3`;
+        messageDiv.textContent = message;
+    }
+    
+    paypal.Buttons({
+        fundingSource: paypal.FUNDING.PAYPAL,
+        style: {
+            layout: 'vertical',
+            color: 'blue',
+            shape: 'rect',
+            label: 'pay'
+        },
+        createOrder: function(data, actions) {
+            // Validate amount
+            const amount = parseFloat(orderAmount);
+            if (!amount || isNaN(amount) || amount <= 0) {
+                showMessage('Invalid order amount', 'danger');
+                throw new Error('Invalid order amount');
+            }
+            
+            return actions.order.create({
+                purchase_units: [{
+                    reference_id: orderId,
+                    description: `Order #${orderId}`,
+                    amount: {
+                        currency_code: 'USD',
+                        value: amount.toFixed(2)
+                    }
+                }],
+                application_context: {
+                    shipping_preference: 'NO_SHIPPING'
+                }
+            });
+        },
+        onApprove: function(data, actions) {
+            showMessage('Processing payment...', 'info');
+            
+            return actions.order.capture().then(function(details) {
+                console.log('Payment completed:', details);
+                
+                // Send payment details to backend
+                return fetch(`/orders/${orderId}/process-payment/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        payment_id: details.id,
+                        status: 'completed',
+                        amount: details.purchase_units[0].amount.value
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.error || 'Payment processing failed');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    showMessage('Payment successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/orders/';
+                    }, 1500);
+                })
+                .catch(error => {
+                    showMessage('Error: ' + error.message, 'danger');
+                    console.error('Payment Error:', error);
+                });
+            });
+        },
+        onError: function(err) {
+            console.error('PayPal Error:', err);
+            showMessage('Payment error: ' + err.message, 'danger');
+        },
+        onCancel: function() {
+            showMessage('Payment cancelled', 'warning');
+        }
+    }).render('#paypal-button-container');
+</script>
+{% endblock %}
