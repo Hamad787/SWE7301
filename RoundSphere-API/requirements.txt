@@ -1,0 +1,11 @@
+Flask==2.1.1
+flask-restx==1.1.0
+Flask-JWT-Extended==4.4.2
+Flask-SQLAlchemy==2.5.1
+Marshmallow==3.14.1
+flask-swagger-ui==4.11.1
+Flask-Migrate==4.0.4
+Flask-CORS==4.0.0
+python-dotenv==1.0.0
+Werkzeug==2.0.3
+SQLAlchemy==1.4.36
