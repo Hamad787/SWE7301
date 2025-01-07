@@ -1,18 +1,110 @@
+# Django and REST framework
 Django==5.1.4
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
 django-cors-headers==4.3.1
 django-environ==0.11.2
+django-filter==23.5
+django-storages==1.14.2
+django-redis==5.4.0
+
+# Flask and extensions
 Flask==2.0.1
 Flask-RESTx==1.0.0
 Flask-SQLAlchemy==2.5.1
 Flask-JWT-Extended==4.3.1
 Flask-Migrate==4.0.5
+Flask-Limiter==3.5.0
+Flask-Caching==2.1.0
+Flask-Mail==0.9.1
+Flask-Cors==4.0.0
+
+# Database
+psycopg2-binary==2.9.9
+SQLAlchemy==2.0.25
+alembic==1.13.1
+redis==5.0.1
+
+# Payment Processing
 paypalrestsdk==1.13.1
-python-dotenv==1.0.0
-requests==2.32.3
-gunicorn==23.0.0
-Pillow==10.2.0
+stripe==7.10.0
+
+# Authentication & Security
 PyJWT==2.10.1
-sqlparse==0.5.2
+python-jose==3.3.0
+passlib==1.7.4
+bcrypt==4.1.2
+python-dotenv==1.0.0
+
+# AWS
+boto3==1.34.11
+botocore==1.34.11
+urllib3<2.1.0,>=1.25.4
+
+# Utils
+requests==2.32.3
+python-dateutil==2.8.2
+pytz==2023.3.post1
+six==1.16.0
+gunicorn==23.0.0
+uvicorn==0.25.0
+celery==5.3.6
+
+# Image Processing
+Pillow==10.2.0
+
+# Testing
+pytest==7.4.3
+pytest-django==4.7.0
+pytest-flask==1.3.0
+coverage==7.4.0
+faker==21.0.0
+
+# Development & Debugging
+black==23.12.1
+flake8==6.1.0
+pylint==3.0.3
+mypy==1.8.0
+ipython==8.19.0
+debugpy==1.8.0
+
+# Documentation
+Sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
+mkdocs==1.5.3
+mkdocs-material==9.5.3
+
+# Monitoring & Logging
+sentry-sdk==1.39.1
+prometheus-client==0.19.0
+python-json-logger==2.0.7
+structlog==23.2.0
+
+# Performance & Caching
+aioredis==2.0.1
+msgpack==1.0.7
+ujson==5.9.0
+
+# Deployment
+supervisor==4.2.5
+fabric==3.2.2
+
+# Frontend Development
+whitenoise==6.6.0
+webassets==2.0
+cssmin==0.2.0
+jsmin==3.0.1
+
+# Code Analysis & Metrics
+radon==6.0.1
+bandit==1.7.6
+safety==2.3.5
+
+# Version Control
+gitpython==3.1.40
+
+# Miscellaneous
 colorama==0.4.6
+tqdm==4.66.1
+humanize==4.9.0
+python-slugify==8.0.1
